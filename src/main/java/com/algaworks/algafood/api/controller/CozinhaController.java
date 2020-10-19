@@ -70,8 +70,8 @@ public class CozinhaController {
 		Cozinha cozinhaAtual = cozinhaRepository.buscar(cozinhaId);
 		
 		if (cozinhaAtual != null) {
-	//		cozinhaAtual.setNome(cozinha.getNome());
-			BeanUtils.copyProperties(cozinha, cozinhaAtual, "id"); // Pega todo objeto e copia para o outro - "id" ignnora o campo id
+			cozinhaAtual.setNome(cozinha.getNome());
+	//		BeanUtils.copyProperties(cozinha, cozinhaAtual, "id"); // Pega todo objeto e copia para o outro - "id" ignnora o campo id
 		
 			cozinhaAtual = cozinhaRepository.salvar(cozinhaAtual); // garante a instância persistida(alterada) em cozinhaAtual
 			return ResponseEntity.ok(cozinhaAtual);		
