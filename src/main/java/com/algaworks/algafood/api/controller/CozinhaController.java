@@ -21,8 +21,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.algaworks.algafood.api.model.CozinhaXmlWrapper;
+import com.algaworks.algafood.domain.exception.EntidadeEmUsoException;
+import com.algaworks.algafood.domain.exception.EntidadeNaoEncontradaException;
 import com.algaworks.algafood.domain.model.Cozinha;
 import com.algaworks.algafood.domain.repository.CozinhaRepository;
+import com.algaworks.algafood.domain.service.CadastroCozinhaService;
 
 //  No RestController possui os dois - @Controller e @ResponseBody
 
@@ -35,16 +38,19 @@ public class CozinhaController {
 	@Autowired
 	private CozinhaRepository cozinhaRepository;
 	
+	@Autowired
+	private CadastroCozinhaService cadastroCozinha;
+	
 	
 	@GetMapping
 	public List<Cozinha> listar() {
 		return cozinhaRepository.listar();			
 	}
 	
-	@GetMapping(produces = MediaType.APPLICATION_XML_VALUE)
-	public CozinhaXmlWrapper listarXml() {
-		return new CozinhaXmlWrapper(cozinhaRepository.listar());			
-	}
+//	@GetMapping(produces = MediaType.APPLICATION_XML_VALUE)
+//	public CozinhaXmlWrapper listarXml() {
+//		return new CozinhaXmlWrapper(cozinhaRepository.listar());			
+//	}
 	
 	@GetMapping("/{cozinhaId}")
 	public ResponseEntity<Cozinha> buscar(@PathVariable Long cozinhaId) {
@@ -62,7 +68,8 @@ public class CozinhaController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public Cozinha adicionar(@RequestBody Cozinha cozinha) {
-		return cozinhaRepository.salvar(cozinha);
+//		return cozinhaRepository.salvar(cozinha);
+		return cadastroCozinha.salvar(cozinha);
 	}
 	
 	@PutMapping("/{cozinhaId}")
@@ -73,7 +80,7 @@ public class CozinhaController {
 	//		cozinhaAtual.setNome(cozinha.getNome());
 			BeanUtils.copyProperties(cozinha, cozinhaAtual, "id"); // Pega todo objeto e copia para o outro - "id" ignnora o campo id
 		
-			cozinhaAtual = cozinhaRepository.salvar(cozinhaAtual); // garante a instância persistida(alterada) em cozinhaAtual
+			cozinhaAtual = cadastroCozinha.salvar(cozinhaAtual); // garante a instância persistida(alterada) em cozinhaAtual
 			return ResponseEntity.ok(cozinhaAtual);		
 		}
 		
@@ -83,16 +90,14 @@ public class CozinhaController {
 	@DeleteMapping("/{cozinhaId}")
 	public ResponseEntity<Cozinha> remover(@PathVariable Long cozinhaId) {
 		try {
-			Cozinha cozinha = cozinhaRepository.buscar(cozinhaId);
+			cadastroCozinha.excluir(cozinhaId);			
 
-			if (cozinha != null) {
-				cozinhaRepository.remover(cozinha);
-
-				return ResponseEntity.noContent().build();
-			}
-
+			return ResponseEntity.noContent().build();
+			
+		} catch (EntidadeNaoEncontradaException e) {
 			return ResponseEntity.notFound().build();
-		} catch (DataIntegrityViolationException e) {
+			
+		} catch (EntidadeEmUsoException e) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).build();
 		}  
 	}
